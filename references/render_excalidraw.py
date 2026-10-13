@@ -1,11 +1,9 @@
 """Render Excalidraw JSON to PNG using Playwright + headless Chromium.
 
-Usage:
-    cd .claude/skills/excalidraw-diagram/references
+Usage (run from the directory holding this script):
     uv run python render_excalidraw.py <path-to-file.excalidraw> [--output path.png] [--scale 2] [--width 1920]
 
-First-time setup:
-    cd .claude/skills/excalidraw-diagram/references
+First-time setup, from that same directory:
     uv sync
     uv run playwright install chromium
 """
@@ -13,9 +11,30 @@ First-time setup:
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import sys
+import threading
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+
+class _QuietHandler(SimpleHTTPRequestHandler):
+    """SimpleHTTPRequestHandler without the per-request logging noise."""
+
+    def log_message(self, fmt: str, *args) -> None:  # noqa: A003
+        pass
+
+
+def start_local_server(directory: Path) -> tuple[ThreadingHTTPServer, int]:
+    """Serve `directory` on a free localhost port in a daemon thread.
+
+    Returns (server, port). Call server.shutdown() when done.
+    """
+    handler = functools.partial(_QuietHandler, directory=str(directory))
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    return httpd, httpd.server_address[1]
 
 
 def validate_excalidraw(data: dict) -> list[str]:
@@ -30,7 +49,7 @@ def validate_excalidraw(data: dict) -> list[str]:
     elif not isinstance(data["elements"], list):
         errors.append("'elements' must be an array")
     elif len(data["elements"]) == 0:
-        errors.append("'elements' array is empty — nothing to render")
+        errors.append("'elements' array is empty - nothing to render")
 
     return errors
 
@@ -81,7 +100,7 @@ def render(
         from playwright.sync_api import sync_playwright
     except ImportError:
         print("ERROR: playwright not installed.", file=sys.stderr)
-        print("Run: cd .claude/skills/excalidraw-diagram/references && uv sync && uv run playwright install chromium", file=sys.stderr)
+        print(f"Run: cd {Path(__file__).parent} && uv sync && uv run playwright install chromium", file=sys.stderr)
         sys.exit(1)
 
     # Read and validate
@@ -120,7 +139,11 @@ def render(
         print(f"ERROR: Template not found at {template_path}", file=sys.stderr)
         sys.exit(1)
 
-    template_url = template_path.as_uri()
+    # ES modules can't be loaded over file:// (blocked by CORS), and the vendored
+    # Excalidraw bundle plus its fonts live next to this script - so serve the
+    # references directory over a throwaway localhost HTTP server instead.
+    httpd, port = start_local_server(template_path.parent)
+    template_url = f"http://127.0.0.1:{port}/{template_path.name}"
 
     with sync_playwright() as p:
         try:
@@ -128,7 +151,7 @@ def render(
         except Exception as e:
             if "Executable doesn't exist" in str(e) or "browserType.launch" in str(e):
                 print("ERROR: Chromium not installed for Playwright.", file=sys.stderr)
-                print("Run: cd .claude/skills/excalidraw-diagram/references && uv run playwright install chromium", file=sys.stderr)
+                print(f"Run: cd {Path(__file__).parent} && uv run playwright install chromium", file=sys.stderr)
                 sys.exit(1)
             raise
 
@@ -140,7 +163,7 @@ def render(
         # Load the template
         page.goto(template_url)
 
-        # Wait for the ES module to load (imports from esm.sh)
+        # Wait for the vendored Excalidraw ES module to initialize
         page.wait_for_function("window.__moduleReady === true", timeout=30000)
 
         # Inject the diagram data and render
@@ -165,6 +188,8 @@ def render(
 
         svg_el.screenshot(path=str(output_path))
         browser.close()
+
+    httpd.shutdown()
 
     return output_path
 

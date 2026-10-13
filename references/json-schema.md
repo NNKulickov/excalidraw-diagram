@@ -53,6 +53,13 @@ All elements share these:
 | `startArrowhead` | null, "arrow", "bar", "dot", "triangle" |
 | `endArrowhead` | null, "arrow", "bar", "dot", "triangle" |
 
+**The visible direction of an arrow is set by `startArrowhead`/`endArrowhead`, not by the
+order of `points`.** A `points` array running left-to-right can still render with the
+arrowhead on the left if `startArrowhead` is set instead of `endArrowhead` - the two are
+independent. When reading someone else's diagram to determine which way a connection
+actually goes, read these two fields, never the point order and never the rendered
+picture by eye: in one real session 4 of 36 arrows read backwards on the render.
+
 ## Binding Format
 
 ```json

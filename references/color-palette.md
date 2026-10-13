@@ -1,6 +1,6 @@
 # Color Palette & Brand Style
 
-**This is the single source of truth for all colors and brand-specific styles.** To customize diagrams for your own brand, edit this file — everything else in the skill is universal.
+**This is the single source of truth for all colors and brand-specific styles.** To customize diagrams for your own brand, edit this file - everything else in the skill is universal.
 
 ---
 
@@ -22,6 +22,13 @@ Colors encode meaning, not decoration. Each semantic purpose has a fill/stroke p
 | Error | `#fecaca` | `#b91c1c` |
 
 **Rule**: Always pair a darker stroke with a lighter fill for contrast.
+
+**`fillStyle` carries meaning too, not just `backgroundColor`.** The same fill color at
+`fillStyle: "solid"` and `fillStyle: "cross-hatch"` (or `"hachure"`) can encode two
+different statuses on the same diagram - e.g. "exists, needs no LLM" vs "doesn't exist
+yet, will need an LLM" at the same blue. Don't change `fillStyle` without a reason, and
+when a node is copied or merged from another sheet, carry its `fillStyle` over along with
+its color - dropping it silently merges two distinct statuses into one.
 
 ---
 
