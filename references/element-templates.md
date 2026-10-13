@@ -1,6 +1,17 @@
 # Element Templates
 
-Copy-paste JSON templates for each Excalidraw element type. The `strokeColor` and `backgroundColor` values are placeholders — always pull actual colors from `color-palette.md` based on the element's semantic purpose.
+Copy-paste JSON templates for each Excalidraw element type. The `strokeColor` and `backgroundColor` values are placeholders - always pull actual colors from `color-palette.md` based on the element's semantic purpose.
+
+## Contents
+
+- [Free-Floating Text (no container)](#free-floating-text-no-container) - labels, titles, annotations
+- [Line (structural, not arrow)](#line-structural-not-arrow) - timelines, tree branches, dividers
+- [Small Marker Dot](#small-marker-dot) - timeline markers, bullets, anchors
+- [Rectangle](#rectangle) - process boxes, sections, evidence artifact backgrounds
+- [Text (centered in shape)](#text-centered-in-shape) - the bound-text half of a container
+- [Arrow](#arrow) - connections, with binding fields
+
+For fields these templates don't cover, see `json-schema.md`.
 
 ## Free-Floating Text (no container)
 ```json
@@ -128,7 +139,7 @@ Copy-paste JSON templates for each Excalidraw element type. The `strokeColor` an
   "fontFamily": 3,
   "textAlign": "center",
   "verticalAlign": "middle",
-  "strokeColor": "<text color — match parent shape's stroke or use 'on light/dark fills' from palette>",
+  "strokeColor": "<text color - match parent shape's stroke or use 'on light/dark fills' from palette>",
   "backgroundColor": "transparent",
   "fillStyle": "solid",
   "strokeWidth": 1,
@@ -155,7 +166,7 @@ Copy-paste JSON templates for each Excalidraw element type. The `strokeColor` an
   "type": "arrow",
   "id": "arrow1",
   "x": 282, "y": 145, "width": 118, "height": 0,
-  "strokeColor": "<arrow color — typically matches source element's stroke from palette>",
+  "strokeColor": "<arrow color - typically matches source element's stroke from palette>",
   "backgroundColor": "transparent",
   "fillStyle": "solid",
   "strokeWidth": 2,
@@ -180,3 +191,9 @@ Copy-paste JSON templates for each Excalidraw element type. The `strokeColor` an
 ```
 
 For curves: use 3+ points in `points` array.
+
+**Direction warning**: `startArrowhead`/`endArrowhead` decide which end actually shows an
+arrowhead when rendered - they can be inverted relative to the order of `points`. Setting
+`points` to go from A to B does not guarantee the arrowhead lands on B; check these two
+fields explicitly, don't assume from point order. See `json-schema.md` for the full note
+and a real example where this produced arrows reading backwards.

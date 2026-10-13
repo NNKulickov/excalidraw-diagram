@@ -12,8 +12,15 @@
 <body>
   <div id="root"></div>
 
+  <script>
+    // Fonts live next to the vendored bundle; tell Excalidraw where to find them.
+    window.EXCALIDRAW_ASSET_PATH = "./vendor/";
+  </script>
+
   <script type="module">
-    import { exportToSvg } from "https://esm.sh/@excalidraw/excalidraw?bundle";
+    // Vendored, fully self-contained build of @excalidraw/excalidraw 0.18.1 -
+    // renders offline, no CDN. Rebuild with: ./vendor/build-bundle.sh
+    import { exportToSvg } from "./vendor/excalidraw.bundle.js";
 
     window.renderDiagram = async function(jsonData) {
       try {
